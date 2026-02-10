@@ -33,61 +33,91 @@ def load_index():
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
     return index
 
-#アプリのメイン処理
-try:
-    index = load_index()
-    # チャットエンジンの作成
-    if "chat_engine" not in st.session_state:
-        st.session_state.chat_engine = index.as_chat_engine(
-            chat_mode="condense_question", 
-            verbose=True
-        )
+def check_password():
+    #パスワードが正しいかチェック
+    def password_entered():
+        #入力されたパスワードを確認するコールバック
+        if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # パスワードを状態から消去して安全に
+        else:
+            st.session_state["password_correct"] = False
 
-    st.title("📝 新潟市店舗記事チャットボット")
+    # すでに認証済みならTrueを返す
+    if st.session_state.get("password_correct", False):
+        return True
 
-    # チャット履歴の表示
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    # ログイン画面を表示
+    st.title("🔒 認証が必要です")
+    st.text_input(
+        "パスワードを入力してください", 
+        type="password", 
+        on_change=password_entered, 
+        key="password"
+    )
+    
+    if "password_correct" in st.session_state:
+        st.error("😕 パスワードが違います")
+    return False
 
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+# --- メイン処理 ---
+if check_password():
 
-    # ユーザー入力
-    if prompt := st.chat_input("質問を入力してください"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+    #アプリのメイン処理
+    try:
+        index = load_index()
+        # チャットエンジンの作成
+        if "chat_engine" not in st.session_state:
+            st.session_state.chat_engine = index.as_chat_engine(
+                chat_mode="condense_question", 
+                verbose=True
+            )
 
-        with st.chat_message("assistant"):
-            with st.spinner("検索中..."):
-                response = st.session_state.chat_engine.chat(prompt)
-                st.markdown(response.response)
+        st.title("📝 新潟市店舗記事チャットボット")
 
-                # === 追加: 参照元の表示 ===
-                # ソースノードからメタデータを抽出
-                sources = []
-                seen_urls = set() # 重複排除用
-                
-                for node in response.source_nodes:
-                    # メタデータの取得（ingest時に保存した title と url）
-                    metadata = node.metadata
-                    url = metadata.get("url", "#")
-                    title = metadata.get("title", "無題のドキュメント")
+        # チャット履歴の表示
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        # ユーザー入力
+        if prompt := st.chat_input("質問を入力してください"):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            with st.chat_message("assistant"):
+                with st.spinner("検索中..."):
+                    response = st.session_state.chat_engine.chat(prompt)
+                    st.markdown(response.response)
+
+                    # === 追加: 参照元の表示 ===
+                    # ソースノードからメタデータを抽出
+                    sources = []
+                    seen_urls = set() # 重複排除用
                     
-                    # URLが重複していない場合のみリストに追加
-                    if url not in seen_urls and url != "#":
-                        sources.append(f"- [{title}]({url})")
-                        seen_urls.add(url)
-                
-                # 参照元があれば表示
-                if sources:
-                    st.markdown("---")
-                    st.markdown("### 📚 参照元")
-                    st.markdown("\n".join(sources))
-                # ==========================
-        
-        st.session_state.messages.append({"role": "assistant", "content": response.response})
+                    for node in response.source_nodes:
+                        # メタデータの取得（ingest時に保存した title と url）
+                        metadata = node.metadata
+                        url = metadata.get("url", "#")
+                        title = metadata.get("title", "無題のドキュメント")
+                        
+                        # URLが重複していない場合のみリストに追加
+                        if url not in seen_urls and url != "#":
+                            sources.append(f"- [{title}]({url})")
+                            seen_urls.add(url)
+                    
+                    # 参照元があれば表示
+                    if sources:
+                        st.markdown("---")
+                        st.markdown("### 📚 参照元")
+                        st.markdown("\n".join(sources))
+                    # ==========================
+            
+            st.session_state.messages.append({"role": "assistant", "content": response.response})
 
-except Exception as e:
-    st.error(f"エラーが発生しました: {e}")
+    except Exception as e:
+        st.error(f"エラーが発生しました: {e}")
