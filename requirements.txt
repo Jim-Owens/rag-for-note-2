@@ -7,7 +7,7 @@ transformers
 sentence-transformers
 numpy<2.0
 
-pinecone-client
+pinecone
 llama-index-vector-stores-pinecone
 feedparser
 trafilatura
