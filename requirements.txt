@@ -1,0 +1,13 @@
+streamlit
+llama-index
+llama-index-llms-gemini
+llama-index-embeddings-huggingface
+torch
+transformers
+sentence-transformers
+numpy<2.0
+
+pinecone-client
+llama-index-vector-stores-pinecone
+feedparser
+trafilatura
