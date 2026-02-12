@@ -70,7 +70,7 @@ if check_password():
         if "chat_engine" not in st.session_state:
             st.session_state.chat_engine = index.as_chat_engine(
                 chat_mode="condense_question", 
-                verbose=True
+                verbose=True,
                 similarity_top_k=10 #関連する上位n記事
             )
 
