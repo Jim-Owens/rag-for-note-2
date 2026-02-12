@@ -19,7 +19,7 @@ st.set_page_config(page_title="Note RAG", page_icon="📝")
 @st.cache_resource
 def load_index():
     #モデルの設定
-    Settings.llm = Gemini(model="gemini-2.5-flash-lite", temperature=0.5)
+    Settings.llm = Gemini(model="gemini-2.0-flash-lite", temperature=0.5)
 
     embed_model = HuggingFaceEmbedding(model_name="intfloat/multilingual-e5-large")
 
