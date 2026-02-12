@@ -71,6 +71,7 @@ if check_password():
             st.session_state.chat_engine = index.as_chat_engine(
                 chat_mode="condense_question", 
                 verbose=True
+                similarity_top_k=10 #関連する上位n記事
             )
 
         st.title("📝 新潟市店舗記事チャットボット")
