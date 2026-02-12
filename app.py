@@ -74,7 +74,7 @@ if check_password():
                 verbose=True,
                 similarity_top_k=5, #関連する上位n記事
                 node_postprocessors=[
-                SimilarityPostprocessor(similarity_cutoff=0.78) 
+                SimilarityPostprocessor(similarity_cutoff=0.80) 
             ]
             )
 
