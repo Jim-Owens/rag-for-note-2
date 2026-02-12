@@ -5,6 +5,7 @@ from llama_index.llms.gemini import Gemini
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from pinecone import Pinecone
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core.postprocessor import SimilarityPostprocessor
 
 # --- StreamlitのSecretsからAPIキー取得 ---
 os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
@@ -71,7 +72,10 @@ if check_password():
             st.session_state.chat_engine = index.as_chat_engine(
                 chat_mode="condense_question", 
                 verbose=True,
-                similarity_top_k=10 #関連する上位n記事
+                similarity_top_k=5, #関連する上位n記事
+                node_postprocessors=[
+                SimilarityPostprocessor(similarity_cutoff=0.78) 
+            ]
             )
 
         st.title("📝 新潟市店舗記事チャットボット")
